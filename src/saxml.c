@@ -487,11 +487,11 @@ static int state_StartCommentTag(void *context, const char character)
     tParserContext *ctxt = (tParserContext *) context;
     pfnParserStateHandler nextState = NULL;
 
-    DBG1("[state_CommentTag] %c\n", character);
+    DBG1("[state_StartCommentTag] %c\n", character);
 
     if(ctxt->bInitialize)
     {
-        DBG("[state_CommentTag] Initialize\n");
+        DBG("[state_StartCommentTag] Initialize\n");
         ctxt->bInitialize = 0;
     }
 
@@ -526,11 +526,11 @@ static int state_CommentTagContent(void *context, const char character)
     tParserContext *ctxt = (tParserContext *) context;
     pfnParserStateHandler nextState = NULL;
 
-    DBG1("[state_CommentTag] %c\n", character);
+    DBG1("[state_CommentTagContent] %c\n", character);
 
     if(ctxt->bInitialize)
     {
-        DBG("[state_CommentTag] Initialize\n");
+        DBG("[state_CommentTagContent] Initialize\n");
         ctxt->bInitialize = 0;
     }
 
@@ -569,11 +569,11 @@ static int state_EndCommentTag(void *context, const char character)
     tParserContext *ctxt = (tParserContext *) context;
     pfnParserStateHandler nextState = NULL;
 
-    DBG1("[state_CommentTag] %c\n", character);
+    DBG1("[state_EndCommentTag] %c\n", character);
 
     if(ctxt->bInitialize)
     {
-        DBG("[state_CommentTag] Initialize\n");
+        DBG("[state_EndCommentTag] Initialize\n");
         ctxt->bInitialize = 0;
     }
 
