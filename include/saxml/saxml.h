@@ -14,7 +14,6 @@ typedef struct
     void *cookie;
     pfnStringHandler tagHandler;
     pfnStringHandler tagEndHandler;
-    pfnStringHandler parameterHandler;
     pfnStringHandler contentHandler;
     pfnStringHandler attributeHandler;
 } tSaxmlContext;
