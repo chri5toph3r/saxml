@@ -10,3 +10,5 @@ add_test(NAME Test2
    COMMAND ${testapp} ${CMAKE_SOURCE_DIR}/vectors/test2.xml -c ${CMAKE_SOURCE_DIR}/vectors/result2.txt)
 add_test(NAME Test3
    COMMAND ${testapp} ${CMAKE_SOURCE_DIR}/vectors/test3.xml -c ${CMAKE_SOURCE_DIR}/vectors/result3.txt)
+add_test(NAME Test4
+   COMMAND ${testapp} ${CMAKE_SOURCE_DIR}/vectors/test4.xml -c ${CMAKE_SOURCE_DIR}/vectors/result4.txt)
