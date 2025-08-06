@@ -70,12 +70,6 @@ static void HandleTagEnd(void *cookie, const char *szString)
     PRINT("tagEndHandler", szString);
 }
 
-static void HandleParameter(void *cookie, const char *szString)
-{
-    UNUSED(cookie);
-    PRINT("parameterHandler", szString);
-}
-
 static void HandleContent(void *cookie, const char *szString)
 {
     UNUSED(cookie);
@@ -155,7 +149,6 @@ int main(int argc, char *argv[])
     saxml_context.cookie = NULL;
     saxml_context.tagHandler = HandleTag;
     saxml_context.tagEndHandler = HandleTagEnd;
-    saxml_context.parameterHandler = HandleParameter;
     saxml_context.contentHandler = HandleContent;
     saxml_context.attributeHandler = HandleAttribute;
     saxml = saxml_Initialize(&saxml_context, max_string_size);

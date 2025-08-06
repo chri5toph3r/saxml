@@ -43,6 +43,9 @@ static int state_TagContents(void *context, const char character);
 static int state_EndTag(void *context, const char character);
 static int state_EmptyTag(void *context, const char character);
 static int state_Attribute(void *context, const char character);
+static int state_StartCommentTag(void *context, const char character);
+static int state_CommentTagContent(void *context, const char character);
+static int state_EndCommentTag(void *context, const char character);
 
 #define ChangeState(ctxt, state) \
     (ctxt)->pfnHandler = state;  \
@@ -205,6 +208,10 @@ static int state_StartTag(void *context, const char character)
             break;
         case '/':
             ChangeState(ctxt, state_EndTag);
+            break;
+        case '!':
+            ctxt->length = 0;
+            ChangeState(ctxt, state_StartCommentTag);
             break;
         default:
             ctxt->buffer[0] = character;
@@ -462,6 +469,122 @@ static int state_EndTag(void *context, const char character)
     if(NULL != nextState)
     {
         CallHandler(ctxt, tagEndHandler);
+        ChangeState(ctxt, nextState);
+    }
+
+    return 0;
+}
+
+/**
+ * @brief When "<!" was found, check whether "--" proceeds
+ *        if it does, change state to CommentTagContent,
+ *        else SAXML_ERROR_SYNTAX
+ * @note Unfortunately this solution allows for whitespace to exist between
+ *       '<' and '!', because of how we discard empty space after '<' (look StartTag)
+ */
+static int state_StartCommentTag(void *context, const char character)
+{
+    tParserContext *ctxt = (tParserContext *) context;
+    pfnParserStateHandler nextState = NULL;
+
+    DBG1("[state_StartCommentTag] %c\n", character);
+
+    if(ctxt->bInitialize)
+    {
+        DBG("[state_StartCommentTag] Initialize\n");
+        ctxt->bInitialize = 0;
+    }
+
+    /* Do not allow for anything other than a "--" after "<!" */
+    if ('-' != character)
+        return SAXML_ERROR_SYNTAX;
+
+    if(ContextBufferAddChar(ctxt, character) != 0)
+        return SAXML_ERROR_BUFFER_OVERFLOW;
+
+    if (ctxt->length == 2)
+    {
+        ctxt->length = 0;
+        nextState = state_CommentTagContent;
+    }
+
+    if(NULL != nextState)
+    {
+        ChangeState(ctxt, nextState);
+    }
+
+    return 0;
+}
+
+/**
+ * @brief Discard every character unless it's a dash, 
+ *        reset buffer if there was no dash following directly,
+ *        if there's a dash following, go to EndCommentTag
+ */
+static int state_CommentTagContent(void *context, const char character)
+{
+    tParserContext *ctxt = (tParserContext *) context;
+    pfnParserStateHandler nextState = NULL;
+
+    DBG1("[state_CommentTagContent] %c\n", character);
+
+    if(ctxt->bInitialize)
+    {
+        DBG("[state_CommentTagContent] Initialize\n");
+        ctxt->bInitialize = 0;
+    }
+
+    switch(character)
+    {
+        case '-':
+            if(ContextBufferAddChar(ctxt, character) != 0)
+                return SAXML_ERROR_BUFFER_OVERFLOW;
+            if (ctxt->length == 2)
+            {
+                ctxt->length = 0;
+                nextState = state_EndCommentTag;
+            }
+            break;
+        default:
+            /* Ignore comment tag's content, reset dash counting */
+            ctxt->length = 0;
+            break;
+    }
+
+    if(NULL != nextState)
+    {
+        ChangeState(ctxt, nextState);
+    }
+
+    return 0;
+}
+
+/**
+ * @brief When "--" was found inside the comment
+ *        only '>' can proceed,
+ *        else SAXML_ERROR_SYNTAX
+ */
+static int state_EndCommentTag(void *context, const char character)
+{
+    tParserContext *ctxt = (tParserContext *) context;
+    pfnParserStateHandler nextState = NULL;
+
+    DBG1("[state_EndCommentTag] %c\n", character);
+
+    if(ctxt->bInitialize)
+    {
+        DBG("[state_EndCommentTag] Initialize\n");
+        ctxt->bInitialize = 0;
+    }
+
+    /* Do not allow for anything other than '>' after "--" in comment's content */
+    if ('>' != character)
+        return SAXML_ERROR_SYNTAX;
+
+    nextState = state_TagContents;
+
+    if(NULL != nextState)
+    {
         ChangeState(ctxt, nextState);
     }
 
