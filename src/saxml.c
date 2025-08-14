@@ -38,6 +38,8 @@ static char g_saxmlBuffer[SAXML_MAX_STRING_LENGTH];
 
 static int state_Begin(void *context, const char character);
 static int state_StartTag(void *context, const char character);
+static int state_DeclarationName(void *context, const char character);
+static int state_DeclarationAttribute(void *context, const char character);
 static int state_TagName(void *context, const char character);
 static int state_TagContents(void *context, const char character);
 static int state_EndTag(void *context, const char character);
@@ -213,11 +215,116 @@ static int state_StartTag(void *context, const char character)
             ctxt->length = 0;
             ChangeState(ctxt, state_StartCommentTag);
             break;
+        case '?':
+            ChangeState(ctxt, state_DeclarationName);
+            break;
         default:
             ctxt->buffer[0] = character;
             ctxt->length = 1;
             ChangeState(ctxt, state_TagName);
             break;
+    }
+
+    return 0;
+}
+
+static int state_DeclarationName(void *context, const char character)
+{
+    tParserContext *ctxt = (tParserContext *) context;
+    pfnParserStateHandler nextState = NULL;
+
+    DBG1("[state_DeclarationName] %c\n", character);
+
+    if(ctxt->bInitialize)
+    {
+        DBG("[state_DeclarationName] Initialize\n");
+        ctxt->length = 0;
+        ctxt->bInitialize = 0;
+    }
+
+    switch(character)
+    {
+        case '<': case '?': case '/': case '>':
+            /* syntax error */
+            return SAXML_ERROR_SYNTAX;
+        case ' ': case '\r': case '\n': case '\t':
+            if (0 == ctxt->length)
+                return SAXML_ERROR_SYNTAX;
+            nextState = state_DeclarationAttribute;
+            break;
+        default:
+            if(ContextBufferAddChar(ctxt, character) != 0)
+               return SAXML_ERROR_BUFFER_OVERFLOW;
+            break;
+    }
+
+    if(NULL != nextState)
+    {
+        CallHandler(ctxt, declarationHandler);
+        ChangeState(ctxt, nextState);
+    }
+
+    return 0;
+}
+
+static int state_DeclarationAttribute(void *context, const char character)
+{
+    tParserContext *ctxt = (tParserContext *) context;
+    pfnParserStateHandler nextState = NULL;
+
+    DBG1("[state_DeclarationAttribute] %c\n", character);
+
+    if(ctxt->bInitialize)
+    {
+        DBG("[state_DeclarationAttribute] Initialize\n");
+        ctxt->length = 0;
+        ctxt->bInitialize = 0;
+        ctxt->bInQuotedText = 0;
+    }
+
+    switch(character)
+    {
+        case '<':
+            /* syntax error */
+            return SAXML_ERROR_SYNTAX;
+        case '>':
+            if (0 == ctxt->length || '?' != ctxt->buffer[ctxt->length - 1])
+                return SAXML_ERROR_SYNTAX;
+            ctxt->length -= 1;
+            nextState = state_Begin;
+            break;
+        case ' ': case '\r': case '\n': case '\t':
+            if(0 != ctxt->bInQuotedText)
+            {
+                if(ContextBufferAddChar(ctxt, character) != 0)
+                    return SAXML_ERROR_BUFFER_OVERFLOW;
+            }
+            else
+            {
+                nextState = state_DeclarationAttribute;
+            }
+            break;
+        case '"':
+            ctxt->bInQuotedText ^= 1;
+            ContextBufferAddChar(ctxt, character);
+            break;
+        default:
+            if(ContextBufferAddChar(ctxt, character) != 0)
+               return SAXML_ERROR_BUFFER_OVERFLOW;
+            break;
+    }
+
+    if(NULL != nextState)
+    {
+        CallHandler(ctxt, declarationAttributeHandler);
+        if (state_Begin == nextState)
+        {
+            ctxt->length = 0;
+            if(ContextBufferAddChar(ctxt, ' ') != 0)
+                    return SAXML_ERROR_BUFFER_OVERFLOW;
+            CallHandler(ctxt, declarationEndHandler);
+        }
+        ChangeState(ctxt, nextState);
     }
 
     return 0;

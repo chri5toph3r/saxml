@@ -12,6 +12,9 @@ typedef void (*pfnStringHandler)(void *cookie, const char *szString);
 typedef struct
 {
     void *cookie;
+    pfnStringHandler declarationHandler;
+    pfnStringHandler declarationAttributeHandler;
+    pfnStringHandler declarationEndHandler;
     pfnStringHandler tagHandler;
     pfnStringHandler tagEndHandler;
     pfnStringHandler contentHandler;

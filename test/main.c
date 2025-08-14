@@ -58,6 +58,24 @@ static char *LoadFile(const char *filename)
  * Parse Event Handlers
  */
 
+static void HandleDeclaration(void *cookie, const char *szString)
+{
+    UNUSED(cookie);
+    PRINT("declarationHandler", szString);
+}
+
+static void HandleDeclarationAttribute(void *cookie, const char *szString)
+{
+    UNUSED(cookie);
+    PRINT("declarationAttributeHandler", szString);
+}
+
+static void HandleDeclarationEnd(void *cookie, const char *szString)
+{
+    UNUSED(cookie);
+    PRINT("declarationEndHandler", szString);
+}
+
 static void HandleTag(void *cookie, const char *szString)
 {
     UNUSED(cookie);
@@ -147,6 +165,9 @@ int main(int argc, char *argv[])
     }
 
     saxml_context.cookie = NULL;
+    saxml_context.declarationHandler = HandleDeclaration;
+    saxml_context.declarationAttributeHandler = HandleDeclarationAttribute;
+    saxml_context.declarationEndHandler = HandleDeclarationEnd;
     saxml_context.tagHandler = HandleTag;
     saxml_context.tagEndHandler = HandleTagEnd;
     saxml_context.contentHandler = HandleContent;
