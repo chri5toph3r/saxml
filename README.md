@@ -160,3 +160,37 @@ contentHandler: 'more content goes here
 '
 tagEndHandler: 'begin'
 ```
+
+### Example #5 (test5.xml)
+
+Any whitespace between TagBegin and TagName states results in a parsing error.
+
+``` xml
+<begin  > 
+   <second_begin yes no="hello">
+      <!-- comment 1 -->
+      <nothing_much attribute_in_small_tag />
+      <!-- <nothing_much2 attribute_in_small_tag2="none"/> -->
+      <!-- error here -> -->< nothing_much3 attribute_in_small_tag3="attribute/with\slashes"/>
+      <another_begin>
+      </another_begin>
+   </second_begin>
+   <!-- comment 3 -->
+   <!-- comment 4 -->
+   more content goes here
+</begin>
+
+```
+
+Callbacks executed:
+
+```
+tagHandler: 'begin'
+tagHandler: 'second_begin'
+attributeHandler: 'yes'
+attributeHandler: 'no="hello"'
+tagHandler: 'nothing_much'
+attributeHandler: 'attribute_in_small_tag'
+tagEndHandler: ' '
+Parsing failed
+```

@@ -204,8 +204,8 @@ static int state_StartTag(void *context, const char character)
             /* Syntax error! */
             return SAXML_ERROR_SYNTAX;
         case ' ': case '\r': case '\n': case '\t':
-            /* Ignore whitespace */
-            break;
+            /* Syntax error! */
+            return SAXML_ERROR_SYNTAX;
         case '/':
             ChangeState(ctxt, state_EndTag);
             break;
@@ -267,7 +267,6 @@ static int state_TagName(void *context, const char character)
 static int state_EmptyTag(void *context, const char character)
 {
     tParserContext *ctxt = (tParserContext *) context;
-    pfnParserStateHandler nextState = NULL;
 
     DBG1("[state_EmptyTag] %c\n", character);
 
@@ -278,20 +277,12 @@ static int state_EmptyTag(void *context, const char character)
         ctxt->bInitialize = 0;
     }
 
-    switch(character)
-    {
-        case '>':
-            nextState = state_TagContents;
-            break;
-        default:
-            break;
-    }
+    /* Do not allow for anything other than '>' after "--" in comment's content */
+    if ('>' != character)
+        return SAXML_ERROR_SYNTAX;
 
-    if(NULL != nextState)
-    {
-        CallHandler(ctxt, tagEndHandler);
-        ChangeState(ctxt, nextState);
-    }
+    CallHandler(ctxt, tagEndHandler);
+    ChangeState(ctxt, state_TagContents);
 
     return 0;
 }
@@ -479,8 +470,6 @@ static int state_EndTag(void *context, const char character)
  * @brief When "<!" was found, check whether "--" proceeds
  *        if it does, change state to CommentTagContent,
  *        else SAXML_ERROR_SYNTAX
- * @note Unfortunately this solution allows for whitespace to exist between
- *       '<' and '!', because of how we discard empty space after '<' (look StartTag)
  */
 static int state_StartCommentTag(void *context, const char character)
 {
@@ -567,7 +556,6 @@ static int state_CommentTagContent(void *context, const char character)
 static int state_EndCommentTag(void *context, const char character)
 {
     tParserContext *ctxt = (tParserContext *) context;
-    pfnParserStateHandler nextState = NULL;
 
     DBG1("[state_EndCommentTag] %c\n", character);
 
@@ -581,12 +569,7 @@ static int state_EndCommentTag(void *context, const char character)
     if ('>' != character)
         return SAXML_ERROR_SYNTAX;
 
-    nextState = state_TagContents;
-
-    if(NULL != nextState)
-    {
-        ChangeState(ctxt, nextState);
-    }
+    ChangeState(ctxt, state_TagContents);
 
     return 0;
 }
