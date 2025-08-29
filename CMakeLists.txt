@@ -33,7 +33,7 @@ include_directories(include)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
-add_library(${project} SHARED ${SAXML_SRC})
+add_library(${project} STATIC ${SAXML_SRC})
 set_target_properties(${project} PROPERTIES PUBLIC_HEADER "saxml/saxml.h")
 if(SAXML_NO_MALLOC)
    target_compile_definitions(${project} PRIVATE "SAXML_NO_MALLOC")

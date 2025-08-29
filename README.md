@@ -194,3 +194,49 @@ attributeHandler: 'attribute_in_small_tag'
 tagEndHandler: ' '
 Parsing failed
 ```
+
+### Example #6 (test6.xml)
+
+Added declarations' handling.
+
+``` xml
+<?xml version="1.0" encoding="UTF-8" ?>
+<?question ? stray?="?question?" ? ?question ver="1.1.2"?>
+<begin  > 
+   <second_begin yes no="hello">
+      <!-- comment 1 -->
+      <nothing_much attribute_in_small_tag />
+      <!-- <nothing_much2 attribute_in_small_tag2="none"/> -->
+      <!-- error here -> -->< nothing_much3 attribute_in_small_tag3="attribute/with\slashes"/>
+      <another_begin>
+      </another_begin>
+   </second_begin>
+   <!-- comment 3 -->
+   <!-- comment 4 -->
+   more content goes here
+</begin>
+```
+
+Callbacks executed:
+
+```
+declarationHandler: 'xml'
+declarationAttributeHandler: 'version="1.0"'
+declarationAttributeHandler: 'encoding="UTF-8"'
+declarationEndHandler: ' '
+declarationHandler: 'question'
+declarationAttributeHandler: '?'
+declarationAttributeHandler: 'stray?="?question?"'
+declarationAttributeHandler: '?'
+declarationAttributeHandler: '?question'
+declarationAttributeHandler: 'ver="1.1.2"'
+declarationEndHandler: ' '
+tagHandler: 'begin'
+tagHandler: 'second_begin'
+attributeHandler: 'yes'
+attributeHandler: 'no="hello"'
+tagHandler: 'nothing_much'
+attributeHandler: 'attribute_in_small_tag'
+tagEndHandler: ' '
+Parsing failed
+```

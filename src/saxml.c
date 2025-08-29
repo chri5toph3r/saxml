@@ -384,7 +384,6 @@ static int state_EmptyTag(void *context, const char character)
         ctxt->bInitialize = 0;
     }
 
-    /* Do not allow for anything other than '>' after "--" in comment's content */
     if ('>' != character)
         return SAXML_ERROR_SYNTAX;
 
